@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: balances_copy_lookup_hash
+    description: >
+      Data from the 'balances' table, with two HASHED Row Access Policies applied:
+      1. Standard RLS based on a hashed lookup table.
+      2. A TRUE filter for admin principals.
+    config:
+      materialized: table
+      tags: ["balances"]
+      post_hook:
+        # Hook 1: Apply standard hashed RLS for non-admins
+        - "{{ apply_hashed_creator_system_rls(
+          target_relation=this,
+          hashed_lookup_relation=ref('hashed_lookup'),
+          filter_column_name='creator_system_id',
+          salt_variable_name='rls_salt'
+          )
+          }}"
+        # Hook 2: Apply TRUE filter RLS for admins
+        - "{{ apply_admin_rls_true_filter(
+          target_relation=this,
+          admin_principals_variable_name='rls_admin_principals'
+          )
+          }}"
+
+    columns:
+      - name: balance_id
+        description: "PK: Unique identifier for the balance record."
+        data_tests:
+          - unique
+          - not_null
+      - name: balance_target
+        description: "Target entity the balance relates to (e.g., AAA, BBB, CCC)."
+      - name: balance_status
+        description: "Status of the balance (e.g., TO DO, IN PROGRESS, DONE)."
+      - name: creator_system_id
+        description: "Identifier for the system that created this balance record. Used for standard RLS filter (hashed)."
+        meta:
+          rls_attribute: true

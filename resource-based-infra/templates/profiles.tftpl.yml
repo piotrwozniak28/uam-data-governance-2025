@@ -1,0 +1,26 @@
+# This is the "profile name". Your dbt_project.yml will refer to this name.
+# E.g., in dbt_project.yml: profile: 'row_level_security'
+row_level_security:
+  # 'outputs' defines one or more "targets" (environments) for this profile.
+  outputs:
+    # 'dev' is the name of a specific target environment (e.g., development).
+    dev:
+      type: bigquery # Specifies the adapter for Google BigQuery.
+      dataset: bqd # The default BigQuery dataset dbt will write models to.
+      job_execution_timeout_seconds: 300 # Max time (5 mins) a BigQuery job can run before dbt times it out.
+      job_retries: 1 # How many times dbt will retry a failed BigQuery job.
+      location: ${region} # The Google Cloud region where BigQuery jobs will run.
+      method:
+        oauth # Authentication method. 'oauth' typically means dbt will use:
+        # 1. Application Default Credentials (ADC) if running on GCP (e.g., GCE, GKE).
+        # 2. Your 'gcloud auth application-default login' credentials if running locally.
+      priority: interactive # BigQuery job priority. 'interactive' means jobs run as soon as possible.
+      project: ${project_id} # Your Google Cloud Project ID.
+      threads: 4 # Number of concurrent models dbt will try to build.
+      maximum_bytes_billed:
+        1000000000 # Cost control: 1GB. BigQuery will reject queries estimated
+        # to process more than this amount of data.
+
+  # 'target' specifies which of the 'outputs' configurations to use by default
+  # if you don't specify one with `dbt run --target <target_name>`.
+  target: dev

@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: query34
+    description: "TPC-DS Query 34: Identifies frequent shoppers based on specific criteria."
+    columns:
+      - name: c_last_name
+        description: "Customer's last name."
+        policy_tags:
+          - "{{ var('PT_PII_DATA') }}"
+      - name: c_first_name
+        description: "Customer's first name."
+        policy_tags:
+          - "{{ var('PT_PII_DATA') }}"
+      - name: c_salutation
+        description: "Customer's salutation (e.g., Mr., Ms.)."
+        policy_tags:
+      - name: c_preferred_cust_flag
+        description: "Flag indicating if the customer is a preferred customer."
+        policy_tags:
+      - name: ss_ticket_number
+        description: "Store sales ticket number."
+        policy_tags:
+      - name: cnt
+        description: "Count of occurrences for the frequent shopper criteria."
+        policy_tags:
+  - name: query34_with_email
+    description: "TPC-DS Query 34: Identifies frequent shoppers based on specific criteria."
+    columns:
+      - name: c_last_name
+        description: "Customer's last name."
+        policy_tags:
+          - "{{ var('PT_PII_DATA') }}"
+      - name: c_first_name
+        description: "Customer's first name."
+        policy_tags:
+          - "{{ var('PT_PII_DATA') }}"
+      - name: c_salutation
+        description: "Customer's salutation (e.g., Mr., Ms.)."
+        policy_tags:
+      - name: c_preferred_cust_flag
+        description: "Flag indicating if the customer is a preferred customer."
+        policy_tags:
+      - name: ss_ticket_number
+        description: "Store sales ticket number."
+        policy_tags:
+      - name: cnt
+        description: "Count of occurrences for the frequent shopper criteria."
+        policy_tags:
+      - name: email
+        description: "User's email"
+        policy_tags:
+          - "{{ var('PT_EMAIL') }}"

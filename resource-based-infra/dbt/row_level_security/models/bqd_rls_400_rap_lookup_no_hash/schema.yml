@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: balances_copy_lookup_no_hash
+    description: >
+      Data from the 'balances' table, simplified to core IDs and status.
+      Materialized as a table with two Row Access Policies applied via macros:
+      1. Standard RLS based on a non-hashed lookup table.
+      2. A TRUE filter for admin principals.
+    config:
+      materialized: table
+      tags: ["balances"]
+      post_hook:
+        # Hook 1: Apply standard RLS for non-admins
+        - "{{ apply_creator_system_rls(
+          target_relation=this,
+          lookup_relation=ref('lookup_table_data_no_hash'),
+          filter_column_name='creator_system_id'
+          )
+          }}"
+        # Hook 2: Apply TRUE filter RLS for admins
+        - "{{ apply_admin_rls_true_filter(
+          target_relation=this,
+          admin_principals_variable_name='rls_admin_principals'
+          )
+          }}"
+
+    columns:
+      - name: balance_id
+        description: "PK: Unique identifier for the balance record."
+        data_tests:
+          - unique
+          - not_null
+      - name: balance_target
+        description: "Target entity the balance relates to (e.g., AAA, BBB, CCC)."
+      - name: balance_status
+        description: "Status of the balance (e.g., TO DO, IN PROGRESS, DONE)."
+      - name: creator_system_id
+        description: "Identifier for the system that created this balance record. Used for standard RLS filter."
+        meta:
+          rls_attribute: true

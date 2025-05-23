@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: balances_copy_basic
+    description: >
+      Data from the 'balances' table, simplified to core IDs and status.
+      Materialized as a table with a Row Access Policy applied via macro.
+    config:
+      materialized: table
+      tags: ["balances"]
+
+    columns:
+      - name: balance_id
+        description: "PK: Unique identifier for the balance record."
+        data_tests:
+          - unique
+          - not_null
+      - name: balance_target
+        description: "Target entity the balance relates to (e.g., AAA, BBB, CCC)."
+      - name: balance_status
+        description: "Status of the balance (e.g., TO DO, IN PROGRESS, DONE)."
+      - name: creator_system_id
+        description: "Identifier for the system that created this balance record. Used for RLS filter."
+        meta:
+          rls_attribute: true

@@ -1,0 +1,109 @@
+# dbt_project.yml
+
+# --- Project Identification and Connection ---
+name: "row_level_security" # 1. The unique name of your dbt project.
+version: "1.0.0" # 2. The version of your project. Useful for managing changes.
+profile:
+  "row_level_security" # 3. CRUCIAL LINK: This tells dbt to look for a profile named
+  #    "row_level_security" in your profiles.yml file.
+  #    Based on your profiles.yml, dbt will then use the 'dev' target
+  #    by default, connecting to BigQuery project 'prj-tpcds-qpzo1'
+  #    and using 'bqd_rls' as the default dataset/schema.
+
+# --- Path Configurations ---
+# These define where dbt looks for different types of project files.
+model-paths: ["models"] # dbt will look for .sql and .py model files in the 'models/' directory.
+analysis-paths: ["analyses"] # For .sql files used for ad-hoc analyses (not materialized in the DB).
+test-paths: ["tests"] # For custom data tests (.sql) and schema tests (.yml).
+seed-paths: ["seeds"] # For .csv files that will be loaded into your data warehouse as tables.
+macro-paths: ["macros"] # For Jinja macros (.sql files) that can be reused across your project.
+snapshot-paths: ["snapshots"] # For configuring snapshots to track changes in mutable source data.
+
+# --- Clean-up Configuration ---
+clean-targets: # Defines what `dbt clean` command will remove.
+  - "target" # The directory where dbt compiles your project and stores artifacts.
+  - "dbt_packages" # Directory where dbt installs external packages.
+  - "logs" # Directory where dbt stores run logs.
+
+# --- Model Configurations ---
+# This section allows you to apply configurations to your models,
+# often based on their subdirectory structure.
+models:
+  row_level_security: # This MUST match your project 'name' (defined above).
+    # Configurations here apply to all models in the 'row_level_security' project.
+
+    # Configurations for models located in 'models/200_authorized_views/'
+    bqd_rls_200_authorized_views:
+      +materialized: view
+      +schema: bqd_rls_200_authorized_views
+
+    bqd_rls_300_rap_basic:
+      +materialized: table
+      +schema: bqd_rls_300_rap_basic
+
+    bqd_rls_400_rap_lookup_no_hash:
+      +materialized: table
+      +schema: bqd_rls_400_rap_lookup_no_hash
+
+    bqd_rls_500_rap_lookup_hash:
+      +materialized: table
+      +schema: bqd_rls_500_rap_lookup_hash
+
+    bqd_tpcds_200_query_results:
+      +persist_docs:
+        relation: true
+        columns: true
+      +materialized: view
+      +schema: bqd_tpcds_200_query_results
+      +tags: ["tpcds"]
+
+# --- Seed Configurations ---
+# Similar to models, this configures how your CSV seed files are loaded.
+seeds:
+  row_level_security: # Again, this MUST match your project 'name'.
+    +tags: ["seed"] # All seeds in this project will be tagged with "seed" by default.
+
+    # Configuration for 'seeds/balances.csv'
+    balances:
+      +schema:
+        bqd_rls_100_source_data # The 'balances.csv' seed data will be loaded into the
+        # BigQuery dataset '100_source_data' in 'prj-tpcds-qpzo1'.
+      +tags: ["seed"] # This specific tag is redundant due to the project-level tag, but harmless.
+      +column_types: # Explicitly defines data types for columns in 'balances.csv'.
+        balance_id: INT64
+        balance_target: STRING
+        balance_status: STRING
+        creator_system_id: INT64
+
+    # Configuration for 'seeds/lookup_table_data_no_hash.csv'
+    lookup_table_data_no_hash:
+      +schema: bqd_rls_400_rap_lookup_no_hash # Seed data loaded into '400_rap_lookup_no_hash' dataset.
+      +tags: ["seed"]
+      +column_types:
+        user_email: STRING
+        allowed_creator_system_id: INT64
+
+    # Configuration for 'seeds/lookup_table_data_hash.csv'
+    lookup_table_data_hash:
+      +schema: bqd_rls_500_rap_lookup_hash # Seed data loaded into '500_rap_lookup_hash' dataset.
+      +tags: ["seed"]
+      +column_types:
+        user_email: STRING
+        allowed_creator_system_id: INT64
+
+# --- Project Variables ---
+# Variables that can be accessed in your dbt models and macros using {{ var('var_name') }}.
+vars:
+  rls_salt:
+    "aVerySecretHardcodedSaltChangeMeImmediately" # 4. A variable named 'rls_salt'.
+    # The comment is a good reminder:
+    # hardcoding secrets here is not ideal for production.
+    # Consider environment variables for actual secrets.
+  rls_admin_principals: # A list of principals who might bypass RLS.
+    - "user:e-prwk@gft.com"
+    - "group:superusers@customcloudsolutions.pl"
+    # - "serviceAccount:sa@prj.iam.gserviceaccount.com"
+
+  TAXONOMY_ID: "${taxonomy_id}"
+  PT_PII_DATA: "${pt_pii_data}"
+  PT_EMAIL: "${pt_email}"
